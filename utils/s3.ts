@@ -5,14 +5,13 @@ import {
   DeleteObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
-
 import { Upload } from "@aws-sdk/lib-storage";
 import dotenv from "dotenv";
-import { PassThrough } from "stream";
+import { UploadParams } from "./params.type";
 
 dotenv.config();
 
-const bucketName = process.env.AWS_BUCKET_NAME;
+const bucketName: string = process.env.AWS_BUCKET_NAME ?? "";
 const region = process.env.AWS_BUCKET_REGION;
 const accessKeyId = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
@@ -44,20 +43,11 @@ export function getAll() {
   return s3Client.send(new ListObjectsV2Command(params));
 }
 
-export function uploadFile(
-  fileBuffer: PassThrough,
-  fileName: string,
-  mimetype: string
-) {
-  const uploadParams = {
-    Bucket: bucketName,
-    Body: fileBuffer,
-    Key: fileName,
-    ContentType: mimetype,
-  };
+export function uploadFile(params: UploadParams) {
+  params.Bucket = bucketName;
 
   return new Upload({
     client: s3Client,
-    params: uploadParams,
+    params: params,
   });
 }

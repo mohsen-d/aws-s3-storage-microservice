@@ -1,24 +1,31 @@
-// @ts-nocheck
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import { IncomingForm } from "formidable";
+import { IncomingForm, Part } from "formidable";
 import { PassThrough } from "stream";
-import { DDD } from "../utils/s3";
+import crypto from "node:crypto";
+import path from "node:path";
+import { uploadFile } from "../utils/s3";
+import { UploadParams } from "../utils/params.type";
 
 export default (req: VercelRequest, res: VercelResponse) => {
   const form = new IncomingForm();
-  const passThrough = new PassThrough();
-  const promise = DDD(passThrough, "unique2.jpg").done();
-  form.onPart = (part: Part) => {
-    part.on("data", function (data) {
-      // pass chunk to passThrough
 
-      var bufferStream = new PassThrough();
-      bufferStream.end(data);
-      bufferStream.pipe(passThrough);
+  const fileContent = new PassThrough();
+  const params = new UploadParams(fileContent);
+
+  form.onPart = (part: Part) => {
+    params.ContentType = part.mimetype ?? "";
+    params.Key =
+      crypto.randomUUID() + path.extname(part.originalFilename ?? "");
+    part.on("data", function (data) {
+      var chunkStream = new PassThrough();
+      chunkStream.end(data);
+      chunkStream.pipe(fileContent);
     });
   };
 
-  promise
+  const upload = uploadFile(params).done();
+
+  upload
     .then((uploadedData) => res.json({ data: uploadedData }))
     .catch((err) => res.json({ error: err }));
 
