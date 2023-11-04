@@ -10,6 +10,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
       url: `https://benvisstoragebucket.s3.ca-central-1.amazonaws.com/${name}`,
     });
   } catch (ex) {
-    res.send(ex);
+    res.status(500).json({
+      status: "error",
+      ex,
+    });
   }
 };
