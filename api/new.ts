@@ -3,7 +3,7 @@ import { IncomingForm, Part } from "formidable";
 import { PassThrough } from "stream";
 import crypto from "node:crypto";
 import path from "node:path";
-import { uploadFile } from "../utils/s3";
+import { uploadFile, bucketUrl } from "../utils/s3";
 import { UploadParams } from "../utils/params.type";
 
 export default (req: VercelRequest, res: VercelResponse) => {
@@ -26,7 +26,9 @@ export default (req: VercelRequest, res: VercelResponse) => {
   const upload = uploadFile(params).done();
 
   upload
-    .then((uploadedData) => res.json({ data: uploadedData }))
+    .then((uploadedData) => {
+      res.json({ url: bucketUrl + params.Key });
+    })
     .catch((err) => res.json({ error: err }));
 
   form.parse(req);

@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import { getAll } from "../utils/s3";
+import { getAll, bucketUrl } from "../utils/s3";
 
 export const config = {
   api: {
@@ -13,7 +13,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     res.status(200).json({
       status: "ok",
-      data,
+      files: data.Contents?.map((c) => bucketUrl + c.Key),
     });
   } catch (ex) {
     res.status(500).json({
